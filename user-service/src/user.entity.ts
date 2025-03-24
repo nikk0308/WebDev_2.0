@@ -1,19 +1,21 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { forwardRef } from '@nestjs/common';
+import { Booking } from './booking/booking.entity';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column()
-  password: string;
+  password!: string;
 
-  @CreateDateColumn()
-  created_at: Date;
+  @OneToMany(() => Booking, booking => booking.id)
+  bookings!: Booking[];
 }
