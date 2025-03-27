@@ -66,6 +66,126 @@ app.post('/users/register', async (req, res) => {
     }
 });
 
+app.post('/venues', async (req, res) => {
+    try {
+        const { name, location, type, description } = req.body;
+        const message = {
+            action: 'create_venue',
+            data: { name, location, type, description },
+        };
+
+        const correlationId = Math.random().toString();
+        const responsePromise = new Promise((resolve, reject) => {
+            responseMap.set(correlationId, resolve);
+            setTimeout(() => reject('Timeout'), 30000);
+        });
+
+        channel.sendToQueue(
+            'user_service_queue',
+            Buffer.from(JSON.stringify(message)),
+            { correlationId, replyTo: 'response_queue' }
+        );
+
+        const response = await responsePromise;
+        if (response.error) {
+            return res.status(500).json(response);
+        }
+        res.status(200).json(response);
+    } catch (error) {
+        res.status(500).json({ error: 'Помилка сервера: ' + error });
+    }
+});
+
+app.post('/bookings', async (req, res) => {
+    try {
+        const { user_id, venue_id, start_time, end_time } = req.body;
+        const message = {
+            action: 'create_booking',
+            data: { user_id, venue_id, start_time, end_time },
+        };
+
+        const correlationId = Math.random().toString();
+        const responsePromise = new Promise((resolve, reject) => {
+            responseMap.set(correlationId, resolve);
+            setTimeout(() => reject('Timeout'), 30000);
+        });
+
+        channel.sendToQueue(
+            'user_service_queue',
+            Buffer.from(JSON.stringify(message)),
+            { correlationId, replyTo: 'response_queue' }
+        );
+
+        const response = await responsePromise;
+        if (response.error) {
+            return res.status(500).json(response);
+        }
+        res.status(200).json(response);
+    } catch (error) {
+        res.status(500).json({ error: 'Помилка сервера: ' + error });
+    }
+});
+
+app.get('/bookings/:user_id', async (req, res) => {
+    try {
+        const { user_id } = req.params;
+        const message = {
+            action: 'get_user_bookings',
+            user_id,
+        };
+
+        const correlationId = Math.random().toString();
+        const responsePromise = new Promise((resolve, reject) => {
+            responseMap.set(correlationId, resolve);
+            setTimeout(() => reject('Timeout'), 30000);
+        });
+
+        channel.sendToQueue(
+            'user_service_queue',
+            Buffer.from(JSON.stringify(message)),
+            { correlationId, replyTo: 'response_queue' }
+        );
+
+        const response = await responsePromise;
+        if (response.error) {
+            return res.status(500).json(response);
+        }
+        res.status(200).json(response);
+    } catch (error) {
+        res.status(500).json({ error: 'Помилка сервера: ' + error });
+    }
+});
+
+app.delete('/bookings/:bookingId', async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const message = {
+            action: 'cancel_booking',
+            bookingId,
+        };
+
+        const correlationId = Math.random().toString();
+        const responsePromise = new Promise((resolve, reject) => {
+            responseMap.set(correlationId, resolve);
+            setTimeout(() => reject('Timeout'), 30000);
+        });
+
+        channel.sendToQueue(
+            'user_service_queue',
+            Buffer.from(JSON.stringify(message)),
+            { correlationId, replyTo: 'response_queue' }
+        );
+
+        const response = await responsePromise;
+        if (response.error) {
+            return res.status(500).json(response);
+        }
+        res.status(200).json(response);
+    } catch (error) {
+        res.status(500).json({ error: 'Помилка сервера: ' + error });
+    }
+});
+
 connectRabbitMQ().then(() => {
     app.listen(3000, '0.0.0.0', () => {
         console.log('API Gateway запущено на порті 3000');
