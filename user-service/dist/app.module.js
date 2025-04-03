@@ -22,10 +22,6 @@ const post_entity_1 = require("./post/post.entity");
 const available_slot_entity_1 = require("./venue/available-slot.entity");
 const comment_entity_1 = require("./post/comment.entity");
 const like_entity_1 = require("./post/like.entity");
-const venue_service_1 = require("./venue/venue.service");
-const venue_controller_1 = require("./venue/venue.controller");
-const booking_service_1 = require("./booking/booking.service");
-const booking_controller_1 = require("./booking/booking.controller");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -34,13 +30,13 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             typeorm_1.TypeOrmModule.forRoot({
                 type: 'postgres',
-                host: 'postgres',
+                host: '127.0.0.1',
                 port: 5432,
                 username: 'postgres',
                 password: 'postgres',
                 database: 'mydb',
                 entities: [user_entity_1.User, venue_entity_1.Venue, booking_entity_1.Booking, post_entity_1.Post, available_slot_entity_1.AvailableSlot, comment_entity_1.Comment, like_entity_1.Like],
-                synchronize: false,
+                synchronize: true,
             }),
             typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, venue_entity_1.Venue, booking_entity_1.Booking, available_slot_entity_1.AvailableSlot]),
             venue_module_1.VenueModule,
@@ -48,8 +44,8 @@ exports.AppModule = AppModule = __decorate([
             post_module_1.PostModule,
             image_processing_module_1.ImageProcessingModule,
         ],
-        controllers: [users_controller_1.UsersController, venue_controller_1.VenueController, booking_controller_1.BookingController],
-        providers: [users_service_1.UsersService, venue_service_1.VenueService, booking_service_1.BookingService],
+        controllers: [users_controller_1.UsersController],
+        providers: [users_service_1.UsersService],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

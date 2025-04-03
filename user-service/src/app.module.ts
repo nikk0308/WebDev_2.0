@@ -1,3 +1,4 @@
+// src/app.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user.entity';
@@ -13,31 +14,26 @@ import { Post } from './post/post.entity';
 import { AvailableSlot } from './venue/available-slot.entity';
 import { Comment } from './post/comment.entity';
 import { Like } from './post/like.entity';
-import { VenueService } from './venue/venue.service';
-import { VenueController } from './venue/venue.controller';
-import { BookingService } from './booking/booking.service';
-import { BookingController } from './booking/booking.controller';
-
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'postgres',
+      host: '127.0.0.1',
       port: 5432,
       username: 'postgres',
       password: 'postgres',
       database: 'mydb',
       entities: [User, Venue, Booking, Post, AvailableSlot, Comment, Like],
-      synchronize: false,
+      synchronize: true,
     }),
-    TypeOrmModule.forFeature([User, Venue, Booking,AvailableSlot]),
+    TypeOrmModule.forFeature([User, Venue, Booking, AvailableSlot]),
     VenueModule,
     BookingModule,
     PostModule,
     ImageProcessingModule,
   ],
-  controllers: [UsersController, VenueController,BookingController],
-  providers: [UsersService, VenueService,BookingService],
+  controllers: [UsersController],
+  providers: [UsersService],
 })
 export class AppModule {}

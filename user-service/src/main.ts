@@ -5,24 +5,45 @@ import { UsersService } from './users.service';
 import { VenueService } from './venue/venue.service';
 import { BookingService } from './booking/booking.service';
 import { ValidationPipe } from '@nestjs/common';
-import 'reflect-metadata';
+
+let channel;
+
+async function connectRabbitMQ() {
+  let connected = false;
+  while (!connected) {
+    try {
+      const connection = await amqp.connect('amqp://guest:guest@127.0.0.1:5672');
+      channel = await connection.createChannel();
+      await channel.assertQueue('user_service_queue');
+      await channel.assertQueue('response_queue');
+      connected = true;
+      console.log('Connected to RabbitMQ');
+    } catch (error) {
+      console.error('Failed to connect to RabbitMQ. Retrying in 5 seconds...');
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+  }
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const connection = await amqp.connect('amqp://rabbitmq:5672');
-  const channel = await connection.createChannel();
 
   app.useGlobalPipes(new ValidationPipe());
 
-  await channel.assertQueue('user_service_queue');
-  await channel.assertQueue('response_queue');
+  // Подключаемся к RabbitMQ
+  await connectRabbitMQ();
 
+  // Запускаем HTTP-сервер только после успешного подключения к RabbitMQ
   await app.listen(3000);
+  console.log(`Application is running on: ${await app.getUrl()}`);
 
+  // Потребление сообщений из очереди
   channel.consume('user_service_queue', async (msg) => {
     if (msg) {
       try {
         const message = JSON.parse(msg.content.toString());
+        let response;
+
         if (message.action === 'register') {
           const user = await app.get(UsersService).register(message.data);
           channel.sendToQueue(

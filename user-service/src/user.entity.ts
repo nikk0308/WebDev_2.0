@@ -1,5 +1,4 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { forwardRef } from '@nestjs/common';
 import { Booking } from './booking/booking.entity';
 
 @Entity('users')

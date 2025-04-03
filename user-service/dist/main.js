@@ -7,19 +7,35 @@ const users_service_1 = require("./users.service");
 const venue_service_1 = require("./venue/venue.service");
 const booking_service_1 = require("./booking/booking.service");
 const common_1 = require("@nestjs/common");
-require("reflect-metadata");
+let channel;
+async function connectRabbitMQ() {
+    let connected = false;
+    while (!connected) {
+        try {
+            const connection = await amqp.connect('amqp://guest:guest@127.0.0.1:5672');
+            channel = await connection.createChannel();
+            await channel.assertQueue('user_service_queue');
+            await channel.assertQueue('response_queue');
+            connected = true;
+            console.log('Connected to RabbitMQ');
+        }
+        catch (error) {
+            console.error('Failed to connect to RabbitMQ. Retrying in 5 seconds...');
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
+    }
+}
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
-    const connection = await amqp.connect('amqp://rabbitmq:5672');
-    const channel = await connection.createChannel();
     app.useGlobalPipes(new common_1.ValidationPipe());
-    await channel.assertQueue('user_service_queue');
-    await channel.assertQueue('response_queue');
+    await connectRabbitMQ();
     await app.listen(3000);
+    console.log(`Application is running on: ${await app.getUrl()}`);
     channel.consume('user_service_queue', async (msg) => {
         if (msg) {
             try {
                 const message = JSON.parse(msg.content.toString());
+                let response;
                 if (message.action === 'register') {
                     const user = await app.get(users_service_1.UsersService).register(message.data);
                     channel.sendToQueue(msg.properties.replyTo, Buffer.from(JSON.stringify(user)), { correlationId: msg.properties.correlationId });
